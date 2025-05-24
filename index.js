@@ -1,27 +1,29 @@
 const express = require('express');
 const multer = require('multer');
+const cors = require('cors');
+const path = require('path');
 
 const app = express();
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: 'uploads/' }); // file will be saved here temporarily
 
-app.use(express.static('public'));
+app.use(cors());
+app.use(express.static('public')); // serve the HTML form
 
+// Serve the form at /
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/views/index.html');
+  res.sendFile(path.join(__dirname, '/public/index.html'));
 });
 
-// POST /upload handler
-app.post('/api/fileanalyse', upload.single('upfile'), async (req, res) => {
-  if (!req.file) return res.status(400).send('No file uploaded.');
+// ✅ API endpoint required by freeCodeCamp
+app.post('/api/fileanalyse', upload.single('upfile'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
 
-  const metadata = {
-    name: req.file.originalname,
-    type: req.file.mimetype,
-    size: req.file.size
-  };
+  const { originalname: name, mimetype: type, size } = req.file;
 
-  res.json(metadata)
+  res.json({ name, type, size });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
