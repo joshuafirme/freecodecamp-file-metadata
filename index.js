@@ -1,15 +1,17 @@
 const express = require('express');
 const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
 
 const app = express();
-const upload = multer({ dest: 'uploads/' }); // save to /uploads
+const upload = multer({ dest: 'uploads/' });
 
-app.use(express.static('public')); // serves your HTML form if in /public
+app.use(express.static('public'));
+
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/views/index.html');
+});
 
 // POST /upload handler
-app.post('/api/fileanalyse', upload.single('upFile'), (req, res) => {
+app.post('/api/fileanalyse', upload.single('upfile'), async (req, res) => {
   if (!req.file) return res.status(400).send('No file uploaded.');
 
   const metadata = {
@@ -18,15 +20,7 @@ app.post('/api/fileanalyse', upload.single('upFile'), (req, res) => {
     size: req.file.size
   };
 
-  // Save metadata as metadata.json
-  fs.writeFile(
-    path.join(__dirname, 'metadata.json'),
-    JSON.stringify(metadata, null, 2),
-    (err) => {
-      if (err) return res.status(500).send('Error saving metadata.');
-      res.send('File uploaded and metadata.json generated!');
-    }
-  );
+  res.json(metadata)
 });
 
 const PORT = process.env.PORT || 3000;
